@@ -32,7 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 员工登录
-
+     *
      * @param employeeLoginDTO
      * @return
      */
@@ -61,25 +61,25 @@ public class EmployeeServiceImpl implements EmployeeService {
             //账号被锁定
             throw new AccountLockedException(MessageConstant.ACCOUNT_LOCKED);
         }
-
         //3、返回实体对象
         return employee;
     }
-
 
 /*
     @Override 主要是为了让编译器用的，告诉编译器使用这个注解的方法是重写（Override）的方法。
     因为重写（Override）的特性是，参数和返回以及方法名都不能变。
     如果在写代码的时候，因为方法名不小心敲错了，在没有 @Override 这个注解之前是比较难发现的。
 */
+
     /**
      * 新增员工
+     *
      * @param employeeDTO
      */
     public void save(EmployeeDTO employeeDTO) {
-        Employee employee=new Employee();
+        Employee employee = new Employee();
         //对象属性拷贝(前提是属性名一致)
-        BeanUtils.copyProperties(employeeDTO,employee);
+        BeanUtils.copyProperties(employeeDTO, employee);
         //设置账号状态，默认正常(使用常量类，可代码复用，避免硬编码)
         employee.setStatus(StatusConstant.ENABLE);
         //设置密码，默认密码123456(使用MD5加密)
@@ -97,6 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     /**
      * 员工分页查询显示
+     *
      * @param employeePageQueryDTO
      * @return
      */
@@ -104,11 +105,56 @@ public class EmployeeServiceImpl implements EmployeeService {
     public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
         //select * from employee limit 0,10
         //开始分页查询
-        PageHelper.startPage(employeePageQueryDTO.getPage(),employeePageQueryDTO.getPageSize());
-        Page<Employee> page= employeeMapper.pageQuery(employeePageQueryDTO);
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
+        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
         long total = page.getTotal();
         List<Employee> records = page.getResult();
-        return new PageResult(total,records);
+        return new PageResult(total, records);
     }
 
+
+    /**
+     * 启用禁用员工账号
+     *
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) {
+        //update employee set status = ? where id = ?
+
+        /*Employee employee = new Employee();
+        employee.setStatus(status);
+        employee.setId(id);*/
+
+        Employee employee = Employee.builder()
+                .status(status)
+                .id(id)
+                .build();
+
+        employeeMapper.update(employee);
+    }
+
+    /**
+     * 根据ID查询员工信息
+     *
+     * @param id
+     * @return
+     */
+    public Employee getById(long id) {
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword("******");
+        return employee;
+    }
+
+    /**
+     * 编辑员工信息
+     * @param employeeDTO
+     */
+    public void update(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+        BeanUtils.copyProperties(employeeDTO,employee);
+        employee.setUpdateTime(LocalDateTime.now());
+        employee.setUpdateUser(BaseContext.getCurrentId());
+        employeeMapper.update(employee);
+    }
 }
